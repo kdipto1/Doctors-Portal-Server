@@ -20,13 +20,30 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
+    //provided services
     const serviceCollection = client.db("doctors_portal").collection("service");
+    // users bookings
     const bookingCollection = client.db("doctors_portal").collection("booking");
+    // users
+    const userCollection = client.db("doctors_portal").collection("users");
     app.get("/service", async (req, res) => {
       const query = {};
       const cursor = serviceCollection.find(query);
       const services = await cursor.toArray();
       res.send(services);
+    });
+
+    // user put
+    app.put("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const filter = { email: email };
+      const option = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
+      const result = await userCollection.updateOne(filter, updateDoc, option);
+      res.send(result)
     });
 
     // Warning: This is not the proper way to query multiple collection.
