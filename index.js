@@ -1,4 +1,5 @@
 const { MongoClient, ServerApiVersion } = require("mongodb");
+const jwt = require("jsonwebtoken");
 const express = require("express");
 const cors = require("cors");
 const app = express();
@@ -43,7 +44,12 @@ async function run() {
         $set: user,
       };
       const result = await userCollection.updateOne(filter, updateDoc, option);
-      res.send(result)
+      const token = jwt.sign(
+        { email: email },
+        process.env.ACCCESS_TOKEN_SECRET,
+        { expiresIn: "1h" }
+      );
+      res.send({result:result, token:token});
     });
 
     // Warning: This is not the proper way to query multiple collection.
@@ -83,6 +89,8 @@ async function run() {
      */
     app.get("/booking", async (req, res) => {
       const patient = req.query.patient;
+      const authorization = req.headers.authorization;
+      console.log('auth header', authorization);
       const query = { patient: patient };
       const bookings = await bookingCollection.find(query).toArray();
       res.send(bookings);
