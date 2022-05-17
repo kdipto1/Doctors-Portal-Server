@@ -41,6 +41,21 @@ async function run() {
     const bookingCollection = client.db("doctors_portal").collection("booking");
     // users
     const userCollection = client.db("doctors_portal").collection("users");
+    //Doctor collection 
+    const doctorCollection = client.db("doctors_portal").collection("doctors");
+
+
+    //Verify admin function
+    const verifyAdmin = async (req, res, next) => {
+      const requester = req.decoded.email;
+      const requesterAccount = await userCollection.findOne({ email: requester })
+      if (requesterAccount.role === "admin") {
+        next();
+      } else {
+        res.status(403).send({ message:"Forbidden Access"})
+      }
+    }
+
     app.get("/service", async (req, res) => {
       const query = {};
       const cursor = serviceCollection.find(query);
@@ -155,6 +170,17 @@ async function run() {
       const result = await bookingCollection.insertOne(booking);
       return res.send({ success: true, result: result });
     });
+    //get all doctors
+    app.get('/doctor', verifyJWT, verifyAdmin, async (req, res) => {
+      const doctors = await doctorCollection.find().toArray();
+      res.send(doctors);
+    })
+    //adding doctors API
+    app.post("/doctor", verifyJWT,verifyAdmin, async (req, res) => {
+      const doctor = req.body;
+      const result = await doctorCollection.insertOne(doctor)
+      res.send(result)
+    })
   } finally {
     // await client.close();
   }
