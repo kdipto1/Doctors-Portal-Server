@@ -232,6 +232,9 @@ run().catch(console.dir);
 app.get("/", (req, res) => {
   res.send("Doctor server root path🐧");
 });
+app.get("/test", (req, res) => {
+  res.json({ result: true });
+});
 
 app.listen(port, () => {
   console.log(`Doctors app listening on port ${port}`);
