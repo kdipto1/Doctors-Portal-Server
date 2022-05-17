@@ -5,10 +5,14 @@ const cors = require("cors");
 const app = express();
 require("dotenv").config();
 const port = process.env.PORT || 5000;
+const nodemailer = require("nodemailer");
+const sgTransport = require("nodemailer-sendgrid-transport");
 
 //middleware
 app.use(cors());
 app.use(express.json());
+//Email sender function
+function sendAppointmentEmail(email, name, date, slot) {}
 //Verify token function:
 function verifyJWT(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -41,20 +45,21 @@ async function run() {
     const bookingCollection = client.db("doctors_portal").collection("booking");
     // users
     const userCollection = client.db("doctors_portal").collection("users");
-    //Doctor collection 
+    //Doctor collection
     const doctorCollection = client.db("doctors_portal").collection("doctors");
-
 
     //Verify admin function
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
-      const requesterAccount = await userCollection.findOne({ email: requester })
+      const requesterAccount = await userCollection.findOne({
+        email: requester,
+      });
       if (requesterAccount.role === "admin") {
         next();
       } else {
-        res.status(403).send({ message:"Forbidden Access"})
+        res.status(403).send({ message: "Forbidden Access" });
       }
-    }
+    };
 
     app.get("/service", async (req, res) => {
       const query = {};
@@ -168,26 +173,32 @@ async function run() {
         return res.send({ success: false, booking: exists });
       }
       const result = await bookingCollection.insertOne(booking);
+      sendAppointmentEmail(
+        booking.patient,
+        booking.patientName,
+        booking.date,
+        booking.slot
+      );
       return res.send({ success: true, result: result });
     });
     //get all doctors
-    app.get('/doctor', verifyJWT, verifyAdmin, async (req, res) => {
+    app.get("/doctor", verifyJWT, verifyAdmin, async (req, res) => {
       const doctors = await doctorCollection.find().toArray();
       res.send(doctors);
-    })
+    });
     //adding doctors API
-    app.post("/doctor", verifyJWT,verifyAdmin, async (req, res) => {
+    app.post("/doctor", verifyJWT, verifyAdmin, async (req, res) => {
       const doctor = req.body;
-      const result = await doctorCollection.insertOne(doctor)
-      res.send(result)
-    })
+      const result = await doctorCollection.insertOne(doctor);
+      res.send(result);
+    });
     //delete doctor
-    app.delete("/doctor/:email", verifyJWT,verifyAdmin, async (req, res) => {
+    app.delete("/doctor/:email", verifyJWT, verifyAdmin, async (req, res) => {
       const email = req.params.email;
       const filter = { email: email };
-      const result = await doctorCollection.deleteOne(filter)
-      res.send(result)
-    })
+      const result = await doctorCollection.deleteOne(filter);
+      res.send(result);
+    });
   } finally {
     // await client.close();
   }
