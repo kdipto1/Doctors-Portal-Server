@@ -70,7 +70,7 @@ async function run() {
   try {
     await client.connect();
     //provided services
-    const serviceCollection = client.db("doctors_portal").collection("service");
+    const serviceCollection = client.db("doctors_portal").collection("services");
     // users bookings
     const bookingCollection = client.db("doctors_portal").collection("booking");
     // users
