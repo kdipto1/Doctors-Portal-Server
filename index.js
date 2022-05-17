@@ -11,8 +11,38 @@ const sgTransport = require("nodemailer-sendgrid-transport");
 //middleware
 app.use(cors());
 app.use(express.json());
+
+const emailSenderOptions = {
+  auth: {
+    api_key: process.env.EMAIL_SENDER_KEY,
+  },
+};
+const emailClient = nodemailer.createTransport(sgTransport(emailSenderOptions));
 //Email sender function
-function sendAppointmentEmail(email, name, date, slot) {}
+function sendAppointmentEmail(booking) {
+  const { patient, patientName, treatment, date, slot } = booking;
+  var email = {
+    from: process.env.EMAIL_SENDER,
+    to: patient,
+    subject: `Your appointment for ${treatment} is on ${date} at ${slot} is confirmed`,
+    text: `Your appointment for ${treatment} is on ${date} at ${slot} is confirmed`,
+    html: `<div>
+    <p>Hello ${patientName}</p>
+    <h4>Yor appointment for ${treatment} is confirmed</h4>
+    <p>Looking forward to seeing you on ${date} at ${slot}</p>
+    <p>Our Address:</p>
+    <p>Dhaka, Bangladesh</p>
+    <a href="https://www.programming-hero.com/">Subscribe</a>
+    </div>`,
+  };
+  emailClient.sendMail(email, function (err, info) {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("Message sent: ", info);
+    }
+  });
+}
 //Verify token function:
 function verifyJWT(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -173,12 +203,7 @@ async function run() {
         return res.send({ success: false, booking: exists });
       }
       const result = await bookingCollection.insertOne(booking);
-      sendAppointmentEmail(
-        booking.patient,
-        booking.patientName,
-        booking.date,
-        booking.slot
-      );
+      sendAppointmentEmail(booking);
       return res.send({ success: true, result: result });
     });
     //get all doctors
