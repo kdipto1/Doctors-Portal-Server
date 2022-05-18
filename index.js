@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
 const express = require("express");
 const cors = require("cors");
@@ -70,7 +70,9 @@ async function run() {
   try {
     await client.connect();
     //provided services
-    const serviceCollection = client.db("doctors_portal").collection("services");
+    const serviceCollection = client
+      .db("doctors_portal")
+      .collection("services");
     // users bookings
     const bookingCollection = client.db("doctors_portal").collection("booking");
     // users
@@ -190,6 +192,13 @@ async function run() {
       } else {
         return res.status(403).send({ message: "Forbidden access" });
       }
+    });
+    // get booked appointment details for payment api
+    app.get("/booking/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const booking = await bookingCollection.findOne(query);
+      res.send(booking);
     });
     app.post("/booking", async (req, res) => {
       const booking = req.body;
