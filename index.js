@@ -80,6 +80,8 @@ async function run() {
     const userCollection = client.db("doctors_portal").collection("users");
     //Doctor collection
     const doctorCollection = client.db("doctors_portal").collection("doctors");
+    //payment Collection
+    const paymentCollection = client.db("doctors_portal").collection("payments");
 
     //Verify admin function
     const verifyAdmin = async (req, res, next) => {
@@ -228,6 +230,21 @@ async function run() {
       sendAppointmentEmail(booking);
       return res.send({ success: true, result: result });
     });
+    //update booking by id for payment info update
+    app.patch("/booking/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const payment = req.body;
+      const filter = { _id: ObjectId(id) }
+      const updatedDoc = {
+        $set: {
+          paid: true,
+          transactionId: payment.transactionId,
+        }
+      }
+      const result = await paymentCollection.insertOne(payment);
+      const updatedbooking = await bookingCollection.updateOne(filter, updatedDoc);
+      res.send(updatedDoc)
+    })
     //get all doctors
     app.get("/doctor", verifyJWT, verifyAdmin, async (req, res) => {
       const doctors = await doctorCollection.find().toArray();
