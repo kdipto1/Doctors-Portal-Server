@@ -44,6 +44,32 @@ function sendAppointmentEmail(booking) {
     }
   });
 }
+//Email sender function for payment
+function sendPaymentConfirmationEmail(booking) {
+  const { patient, patientName, treatment, date, slot } = booking;
+  var email = {
+    from: process.env.EMAIL_SENDER,
+    to: patient,
+    subject: `We have received your payment for ${treatment} is on ${date} at ${slot} is confirmed`,
+    text: `Your payment for this appointment ${treatment} is on ${date} at ${slot} is confirmed`,
+    html: `<div>
+    <p>Hello ${patientName}</p>
+    <h4>thank you for your payment</h4>
+    <h3>We have received your payment</h3>
+    <p>Looking forward to seeing you on ${date} at ${slot}</p>
+    <p>Our Address:</p>
+    <p>Dhaka, Bangladesh</p>
+    <a href="https://www.programming-hero.com/">Subscribe</a>
+    </div>`,
+  };
+  emailClient.sendMail(email, function (err, info) {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("Message sent: ", info);
+    }
+  });
+}
 //Verify token function:
 function verifyJWT(req, res, next) {
   const authHeader = req.headers.authorization;
